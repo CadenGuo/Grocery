@@ -1,0 +1,7 @@
+listen_addr: :8080
+debug: true
+db:
+  host: localhost
+  name: grocery_db
+  user: grocery_user
+  password: "123456"
