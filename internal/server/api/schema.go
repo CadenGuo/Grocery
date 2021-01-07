@@ -1,45 +1,67 @@
 package api
 
-type ApplySslCertSchema struct {
-	Domain      string `json:"domain" binding:"required"`
-	ZoneId      string `json:"zoneId" binding:"required"`
-	Period      int    `json:"period" binding:"required"`
-	ProjectName string `json:"projectName"`
-	ProjectId   int    `json:"projectId"`
-	ApplyDate   int    `json:"applyDate"`
-	Owner       string `json:"owner"`
-	Org         string `json:"org"`
+import (
+	"grocery/internal/db"
+	"time"
+)
+
+type CreateGroceryItemSchema struct {
+	Name       string             `json:"name" binding:"required"`
+	Unit       string             `json:"unit" binding:"required"`
+	Amount     float64            `json:"amount" binding:"required"`
+	Type       db.GroceryItemType `json:"type" binding:"required"`
+	Expiration *time.Time         `json:"expiration,omitempty"`
 }
 
-type ListSslCertSchema struct {
-	Domain string `form:"domain" binding:"required"`
+type UpdateGroceryItemSchema struct {
+	Id         int                 `json:"id" binding:"required"`
+	Name       *string             `json:"name"`
+	Unit       *string             `json:"unit"`
+	Amount     *float64            `json:"amount"`
+	Type       *db.GroceryItemType `json:"type"`
+	Expiration *time.Time          `json:"expiration,omitempty"`
 }
 
-type GtsCallbackSchema struct {
-	Domain string `json:"domain" binding:"required"`
-	Crt    string `json:"crt" binding:"required"`
-	Key    string `json:"key" binding:"required"`
-	Ref    string `json:"ref" binding:"required"`
-	Cost   string `json:"cost" binding:"required"`
+type DeleteGroceryItemSchema struct {
+	Id int `json:"id" binding:"required"`
 }
 
-type GetSslPrivateKeySchema struct {
-	Serial string `form:"serial" binding:"required"`
+type ListGroceryItemSchema struct {
+	Id               *int                `form:"id"`
+	Name             *string             `form:"name"`
+	Type             *db.GroceryItemType `form:"type"`
+	ExpirationBefore *time.Time          `form:"expiration_before"`
+	ExpirationAfter  *time.Time          `form:"expiration_after"`
 }
 
-type CreateSanCertSchema struct {
-	Domain      string `json:"domain" binding:"required"`
-	Crt         string `json:"crt" binding:"required"`
-	Key         string `json:"key" binding:"required"`
-	Ref         string `json:"ref" binding:"required"`
-	Cost        string `json:"cost" binding:"required"`
-	ProjectName string `json:"projectName" binding:"required"`
-	ProjectId   int    `json:"projectId" binding:"required"`
-	Period      int    `json:"period" binding:"required"`
-	Owner       string `json:"owner" binding:"required"`
+type CreateDrinkSchema struct {
+	Name       string     `json:"name" binding:"required"`
+	Unit       string     `json:"unit" binding:"required"`
+	Amount     float64    `json:"amount" binding:"required"`
+	Carbonated bool       `json:"carbonated"`
+	Alcoholic  bool       `json:"alcoholic"`
+	Expiration *time.Time `json:"expiration,omitempty"`
 }
 
+type UpdateDrinkSchema struct {
+	Id         int        `json:"id" binding:"required"`
+	Name       *string    `json:"name"`
+	Unit       *string    `json:"unit"`
+	Amount     *float64   `json:"amount"`
+	Carbonated *bool      `json:"carbonated"`
+	Alcoholic  *bool      `json:"alcoholic"`
+	Expiration *time.Time `json:"expiration,omitempty"`
+}
 
+type ListDrinkSchema struct {
+	Id               *int       `form:"id"`
+	Name             *string    `form:"name"`
+	Carbonated       *bool      `form:"carbonated"`
+	Alcoholic        *bool      `form:"alcoholic"`
+	ExpirationBefore *time.Time `form:"expiration_before"`
+	ExpirationAfter  *time.Time `form:"expiration_after"`
+}
 
-
-
+type DeleteDrinkSchema struct {
+	Id int `json:"id" binding:"required"`
+}

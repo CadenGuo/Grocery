@@ -15,9 +15,16 @@ func routerEngine(h *api.Handler) *gin.Engine {
 
 	api := r.Group("/api")
 
-	api.POST("/create_grocery_item", h.GroceryItem)
-	api.PUT("/update_grocery_item", h.GroceryItem)
-	api.GET("/list_grocery_item", h.GroceryItem)
+	api.POST("/grocery_item", h.GroceryItem)
+	api.PUT("/grocery_item", h.GroceryItem)
+	api.GET("/grocery_item", h.GroceryItem)
+	api.DELETE("/grocery_item", h.GroceryItem)
+
+	api.POST("/drink", h.Drink)
+	api.PUT("/drink", h.Drink)
+	api.GET("/drink", h.Drink)
+	api.DELETE("/drink", h.Drink)
+
 	api.POST("/create_dishes", h.Dishes)
 	api.GET("/list_dishes", h.Dishes)
 	return r

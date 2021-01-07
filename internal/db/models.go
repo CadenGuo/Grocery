@@ -1,47 +1,42 @@
 package db
 
-import "time"
+import (
+	"database/sql/driver"
+	"time"
+)
 
-type Protein struct {
-	Id         int     `gorm:"type:int;autoIncrement;not null"`
-	Name       string  `gorm:"size:100;not null"`
-	Unit       string  `gorm:"type:text;size:100"`
-	Amount     float64 `gorm:"type:float"`
+type GroceryItemType string
+
+const (
+	Protein     GroceryItemType = "protein"
+	Vegetable   GroceryItemType = "vegetable"
+	Fruit       GroceryItemType = "fruit"
+	Cereals     GroceryItemType = "cereals"
+	InstantFood GroceryItemType = "instant_food"
+)
+
+func (e *GroceryItemType) Scan(value interface{}) error {
+	*e = GroceryItemType(value.([]byte))
+	return nil
+}
+
+func (e GroceryItemType) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+type GroceryItem struct {
+	Id         int             `gorm:"type:int;autoIncrement;not null"`
+	Name       string          `gorm:"size:100;not null"`
+	Unit       string          `gorm:"type:text;size:100"`
+	Amount     float64         `gorm:"type:float"`
 	Expiration time.Time
+	Type       GroceryItemType `json:"type" gorm:"type:ENUM('protein', 'vegetable', 'fruit', 'cereals', 'instant_food')"`
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 }
 
-func (Protein) TableName() string {
-	return "protein"
-}
-
-type Vegetable struct {
-	Id         int     `gorm:"type:int;autoIncrement;not null"`
-	Name       string  `gorm:"size:100;not null"`
-	Unit       string  `gorm:"type:text;size:100"`
-	Amount     float64 `gorm:"type:float"`
-	Expiration time.Time
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-}
-
-func (Vegetable) TableName() string {
-	return "vegetable"
-}
-
-type Fruit struct {
-	Id         int     `gorm:"type:int;autoIncrement;not null"`
-	Name       string  `gorm:"size:100;not null"`
-	Unit       string  `gorm:"type:text;size:100"`
-	Amount     float64 `gorm:"type:float"`
-	Expiration time.Time
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-}
-
-func (Fruit) TableName() string {
-	return "fruit"
+func (GroceryItem) TableName() string {
+	return "grocery_item"
 }
 
 type Drink struct {
@@ -60,42 +55,11 @@ func (Drink) TableName() string {
 	return "drink"
 }
 
-type Cereals struct {
-	Id         int     `gorm:"type:int;autoIncrement;not null"`
-	Name       string  `gorm:"size:100;not null"`
-	Unit       string  `gorm:"type:text;size:100"`
-	Amount     float64 `gorm:"type:float"`
-	Expiration time.Time
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-}
-
-func (Cereals) TableName() string {
-	return "cereals"
-}
-
-type InstantFood struct {
-	Id         int     `gorm:"type:int;autoIncrement;not null"`
-	Name       string  `gorm:"size:100;not null"`
-	Unit       string  `gorm:"type:text;size:100"`
-	Amount     float64 `gorm:"type:float"`
-	Expiration time.Time
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-}
-
-func (InstantFood) TableName() string {
-	return "instant_food"
-}
-
 type Dishes struct {
-	Id         int         `gorm:"type:int;autoIncrement;not null"`
-	Name       string      `gorm:"size:100;not null"`
-	Protein    []Protein   `gorm:"many2many:dishes_protein;"`
-	Vegetable  []Vegetable `gorm:"many2many:dishes_vegetable;"`
-	Fruit      []Fruit     `gorm:"many2many:dishes_fruit;"`
-	Cereals    []Cereals   `gorm:"many2many:dishes_cereals;"`
-	Complexity int         `gorm:"check:complexity > 0"`
+	Id         int           `gorm:"type:int;autoIncrement;not null"`
+	Name       string        `gorm:"size:100;not null"`
+	Protein    []GroceryItem `gorm:"many2many:dishes_grocery_item;"`
+	Complexity int           `gorm:"check:complexity > 0"`
 }
 
 func (Dishes) TableName() string {

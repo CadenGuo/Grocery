@@ -5,6 +5,8 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"grocery/config"
+	"grocery/internal/common"
+	"time"
 )
 
 type Manager struct {
@@ -31,213 +33,150 @@ func (db *Manager) Connect(c config.Conf) error {
 
 func (db *Manager) Migrate() error {
 	return db.DbIns.AutoMigrate(
-		&Protein{},
-		&Vegetable{},
-		&Fruit{},
-		&Cereals{},
+		&GroceryItem{},
 		&Dishes{},
 		&Drink{},
 	)
 }
 
-//func (db *Manager) ListDomain(status string) ([]Domain, error) {
-//	var domains []Domain
-//
-//	result := db.DbIns.Preload("All").Where(&Domain{Status: status}).Find(&domains)
-//	if result.Error != nil {
-//		return domains, result.Error
-//	}
-//	return domains, nil
-//}
-//
-//func (db *Manager) GetDomain(domainName string) (Domain, error) {
-//	domain := Domain{Name: domainName}
-//
-//	result := db.DbIns.Preload("All").First(&domain)
-//	if result.Error != nil {
-//		return Domain{}, result.Error
-//	}
-//	return domain, nil
-//}
-//
-//func (db *Manager) CreateDomain(
-//	name string,
-//	status string,
-//	ref string,
-//	dnsName string,
-//	dnsValue string,
-//	all *All,
-//) (Domain, error) {
-//	domain := Domain{Name: name, Status: status, Ref: ref, DnsName: dnsName, DnsValue: dnsValue, All: *all}
-//	result := db.DbIns.Create(&domain)
-//	if result.Error != nil {
-//		return Domain{}, result.Error
-//	}
-//	return domain, nil
-//}
-//
-//func (db *Manager) UpdateDomain(domain *Domain) (Domain, error) {
-//	if domain.Name == "" {
-//		return Domain{}, errors.New("")
-//	}
-//	result := db.DbIns.Save(&domain)
-//	if result.Error != nil {
-//		return Domain{}, result.Error
-//	}
-//	return *domain, nil
-//}
-//
-//func (db *Manager) DeleteDomain(name string) error {
-//	result := db.DbIns.Delete(&Domain{Name: name})
-//	if result.Error != nil {
-//		return result.Error
-//	}
-//	return nil
-//}
-//
-//func (db *Manager) ListDomainCertApplication(domainName string) ([]All, error) {
-//	var domainCertApplications []All
-//	result := db.DbIns.Where(map[string]interface{}{"name": domainName}).Find(&domainCertApplications)
-//	if result.Error != nil {
-//		return []All{}, result.Error
-//	}
-//	return domainCertApplications, nil
-//}
-//
-//type CertApplicationIterator struct {
-//	rows  *sql.Rows
-//	dbIns *gorm.DB
-//}
-//
-//func (I *CertApplicationIterator) Next(certApplication *All) bool {
-//	ok := I.rows.Next()
-//	if !ok {
-//		return false
-//	}
-//	// ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
-//	err := I.dbIns.ScanRows(I.rows, &certApplication)
-//	if err != nil {
-//		return false
-//	}
-//	return true
-//}
-//func (db *Manager) ListValidCertApplicationIteration() (*CertApplicationIterator, error) {
-//	rows, err := db.DbIns.Not("serial = ?", "").Model(&All{}).Rows()
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &CertApplicationIterator{
-//		rows:  rows,
-//		dbIns: db.DbIns,
-//	}, nil
-//}
+func getExpiration(expiration *time.Time) time.Time {
+	var expirationValue time.Time
+	if expiration != nil {
+		expirationValue = *expiration
+	} else {
+		expirationValue = common.DefaultExpiration
+		fmt.Println(expiration)
+	}
+	return expirationValue
+}
 
-//func (db *Manager) GetDomainCertApplication(serial string) (All, error) {
-//	var domainCertApplication All
-//	result := db.DbIns.Where(&All{Serial: serial}).First(&domainCertApplication)
-//	if result.Error != nil {
-//		return All{}, result.Error
-//	}
-//	return domainCertApplication, nil
-//}
-//
-//func (db *Manager) CreateDomainCertApplication(
-//	name string,
-//	crt string,
-//	key string,
-//	serial string,
-//	flag bool,
-//) (All, error) {
-//	domainCertApplication := All{Name: name, Crt: crt, Key: key, Serial: serial, Flag: flag}
-//	result := db.DbIns.Create(&domainCertApplication)
-//	if result.Error != nil {
-//		return All{}, result.Error
-//	}
-//	return domainCertApplication, nil
-//}
-//
-//func (db *Manager) UpdateDomainCertApplication(domainCertApplication *All) (All, error) {
-//	if domainCertApplication.Id == 0 {
-//		return All{}, errors.New("invalid cert application")
-//	}
-//	result := db.DbIns.Save(&domainCertApplication)
-//	if result.Error != nil {
-//		return All{}, result.Error
-//	}
-//	return *domainCertApplication, nil
-//}
-//
-//func (db *Manager) DeleteDomainCertApplication(id int) error {
-//	result := db.DbIns.Delete(&All{Id: id})
-//	if result.Error != nil {
-//		return result.Error
-//	}
-//	return nil
-//}
-//
-//func (db *Manager) GetDomainAudit(ref string) (Audit, error) {
-//	var domainAudit Audit
-//
-//	result := db.DbIns.Where(&Audit{
-//		Ref: ref,
-//	}).First(&domainAudit)
-//
-//	if result.Error != nil {
-//		return Audit{}, result.Error
-//	}
-//	return domainAudit, nil
-//}
-//
-//func (db *Manager) CreateDomainAudit(
-//	domainName string,
-//	owner string,
-//	ref string,
-//	org string,
-//	projectName string,
-//	applyDate time.Time,
-//	projectId int,
-//	crtType int,
-//	cost float64,
-//) (Audit, error) {
-//	domainAudit := Audit{DomainName: domainName, Owner: owner, Ref: ref, Org: org, ProjectName: projectName, ApplyDate: applyDate, ProjectId: projectId, CrtType: crtType, Cost: cost}
-//	result := db.DbIns.Create(&domainAudit)
-//	if result.Error != nil {
-//		return Audit{}, result.Error
-//	}
-//	return domainAudit, nil
-//}
-//
-//func (db *Manager) UpdateDomainAudit(domainAudit *Audit) (Audit, error) {
-//	if domainAudit.Id == 0 {
-//		return Audit{}, errors.New("invalid domain audit")
-//	}
-//	result := db.DbIns.Save(&domainAudit)
-//	if result.Error != nil {
-//		return Audit{}, result.Error
-//	}
-//	return *domainAudit, nil
-//}
-//
-//func (db *Manager) GetPendingDomainAudit(domainName string) (Audit, error) {
-//	var domainAudit Audit
-//
-//	result := db.DbIns.Where(&Audit{
-//		Ref:        "",
-//		Cost:       0,
-//		DomainName: domainName,
-//	}).First(&domainAudit)
-//
-//	if result.Error != nil {
-//		return Audit{}, result.Error
-//	}
-//	return domainAudit, nil
-//}
-//
-//func (db *Manager) DeleteDomainAudit(ref string) error {
-//	result := db.DbIns.Where(&Audit{Ref: ref}).Delete(&Audit{})
-//	if result.Error != nil {
-//		return result.Error
-//	}
-//	return nil
-//}
+func (db *Manager) CreateGroceryItem(
+	name string,
+	unit string,
+	amount float64,
+	itemType GroceryItemType,
+	expiration *time.Time,
+) (GroceryItem, error) {
+	groceryItem := GroceryItem{Name: name, Unit: unit, Amount: amount, Type: itemType, Expiration: getExpiration(expiration)}
+	result := db.DbIns.Create(&groceryItem)
+	if result.Error != nil {
+		return GroceryItem{}, result.Error
+	}
+	return groceryItem, nil
+}
+
+func (db *Manager) UpdateGroceryItem(groceryItem GroceryItem) (GroceryItem, error) {
+	result := db.DbIns.Save(&groceryItem)
+	if result.Error != nil {
+		return GroceryItem{}, result.Error
+	}
+	return groceryItem, nil
+}
+
+func (db *Manager) DeleteGroceryItem(id int) error {
+	result := db.DbIns.Delete(&GroceryItem{Id: id})
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (db *Manager) ListGroceryItem(
+	id *int,
+	name *string,
+	itemType *GroceryItemType,
+	expirationBefore *time.Time,
+	expirationAfter *time.Time,
+) ([]GroceryItem, error) {
+	var groceryItems []GroceryItem
+	var result *gorm.DB
+	query := db.DbIns.Where("")
+	if id != nil {
+		query = query.Where("id = ?", *id)
+	}
+	if name != nil {
+		query = query.Where("name = ?", *name)
+	}
+	if itemType != nil {
+		query = query.Where("type = ?", *itemType)
+	}
+	if expirationBefore != nil {
+		query = query.Where("expiration < ?", *expirationBefore)
+	}
+	if expirationAfter != nil {
+		query = query.Where("expiration > ?", *expirationAfter)
+	}
+	result = query.Find(&groceryItems)
+	if result.Error != nil {
+		return []GroceryItem{}, result.Error
+	}
+	return groceryItems, nil
+}
+
+func (db *Manager) CreateDrink(
+	name string,
+	unit string,
+	amount float64,
+	carbonated bool,
+	alcoholic bool,
+	expiration *time.Time,
+) (Drink, error) {
+	drink := Drink{Name: name, Unit: unit, Amount: amount, Carbonated: carbonated, Alcoholic: alcoholic, Expiration: getExpiration(expiration)}
+	result := db.DbIns.Create(&drink)
+	if result.Error != nil {
+		return Drink{}, result.Error
+	}
+	return drink, nil
+}
+
+func (db *Manager) UpdateDrink(drink Drink) (Drink, error) {
+	result := db.DbIns.Save(&drink)
+	if result.Error != nil {
+		return Drink{}, result.Error
+	}
+	return drink, nil
+}
+
+func (db *Manager) DeleteDrink(id int) error {
+	result := db.DbIns.Delete(&Drink{Id: id})
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (db *Manager) ListDrink(
+	id *int,
+	name *string,
+	carbonated *bool,
+	alcoholic *bool,
+	expirationBefore *time.Time,
+	expirationAfter *time.Time,
+) ([]Drink, error) {
+	var drinks []Drink
+	var result *gorm.DB
+	query := db.DbIns.Where("")
+	if id != nil {
+		query = query.Where("id = ?", *id)
+	}
+	if name != nil {
+		query = query.Where("name = ?", *name)
+	}
+	if carbonated != nil {
+		query = query.Where("carbonated = ?", *carbonated)
+	}
+	if alcoholic != nil {
+		query = query.Where("alcoholic = ?", *alcoholic)
+	}
+	if expirationBefore != nil {
+		query = query.Where("expiration < ?", *expirationBefore)
+	}
+	if expirationAfter != nil {
+		query = query.Where("expiration > ?", *expirationAfter)
+	}
+	result = query.Find(&drinks)
+	if result.Error != nil {
+		return []Drink{}, result.Error
+	}
+	return drinks, nil
+}

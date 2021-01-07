@@ -1,5 +1,7 @@
 package common
 
+import "time"
+
 // Error Code
 const (
 	ErrorInvalidParameters = "INVALID_PARAMETERS"
@@ -11,9 +13,8 @@ const (
 // Empty Value
 var EmptyMap = map[string]interface{}{}
 
-// Domain related constants
-const (
-	DomainCertStatusPending = "Pending"
-	DomainCertStatusDone = "Done"
-	DomainCertStatusGts = "GTS"
-)
+var timeLayout = "2006-01-02T15:04:05.000Z"
+var timeStr = "2099-12-31T23:59:59.991Z"
+var DefaultExpiration, _ = time.Parse(timeLayout, timeStr)
+
+
