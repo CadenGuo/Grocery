@@ -25,14 +25,14 @@ func (e GroceryItemType) Value() (driver.Value, error) {
 }
 
 type GroceryItem struct {
-	Id         int             `gorm:"type:int;autoIncrement;not null"`
-	Name       string          `gorm:"size:100;not null"`
-	Unit       string          `gorm:"type:text;size:100"`
-	Amount     float64         `gorm:"type:float"`
-	Expiration time.Time
+	Id         int             `json:"id" gorm:"type:int;autoIncrement;not null"`
+	Name       string          `json:"name" gorm:"size:100;not null"`
+	Unit       string          `json:"unit" gorm:"type:text;size:100"`
+	Amount     float64         `json:"amount" gorm:"type:float"`
 	Type       GroceryItemType `json:"type" gorm:"type:ENUM('protein', 'vegetable', 'fruit', 'cereals', 'instant_food')"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	Expiration time.Time       `json:"expiration"`
+	CreatedAt  time.Time       `json:"created_at"`
+	UpdatedAt  time.Time       `json:"updated_at"`
 }
 
 func (GroceryItem) TableName() string {
@@ -40,15 +40,15 @@ func (GroceryItem) TableName() string {
 }
 
 type Drink struct {
-	Id         int     `gorm:"type:int;autoIncrement;not null"`
-	Name       string  `gorm:"size:100;not null"`
-	Unit       string  `gorm:"type:text;size:100"`
-	Amount     float64 `gorm:"type:float"`
-	Expiration time.Time
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	Carbonated bool
-	Alcoholic  bool
+	Id         int       `json:"id" gorm:"type:int;autoIncrement;not null"`
+	Name       string    `json:"name" gorm:"size:100;not null"`
+	Unit       string    `json:"unit" gorm:"type:text;size:100"`
+	Amount     float64   `json:"amount" gorm:"type:float"`
+	Expiration time.Time `json:"expiration"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	Carbonated bool      `json:"carbonated"`
+	Alcoholic  bool      `json:"alcoholic"`
 }
 
 func (Drink) TableName() string {
@@ -56,10 +56,10 @@ func (Drink) TableName() string {
 }
 
 type Dishes struct {
-	Id         int           `gorm:"type:int;autoIncrement;not null"`
-	Name       string        `gorm:"size:100;not null"`
-	Protein    []GroceryItem `gorm:"many2many:dishes_grocery_item;"`
-	Complexity int           `gorm:"check:complexity > 0"`
+	Id          int           `json:"id" gorm:"type:int;autoIncrement;not null"`
+	Name        string        `json:"name" gorm:"size:100;not null"`
+	GroceryItem []GroceryItem `json:"grocery_item" gorm:"many2many:dishes_grocery_item;"`
+	Complexity  int           `json:"complexity" gorm:"check:complexity > 0"`
 }
 
 func (Dishes) TableName() string {

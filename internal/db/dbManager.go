@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -89,13 +90,12 @@ func (db *Manager) ListGroceryItem(
 	expirationAfter *time.Time,
 ) ([]GroceryItem, error) {
 	var groceryItems []GroceryItem
-	var result *gorm.DB
 	query := db.DbIns.Where("")
 	if id != nil {
 		query = query.Where("id = ?", *id)
 	}
 	if name != nil {
-		query = query.Where("name = ?", *name)
+		query = query.Where("name LIKE ?", "%"+*name+"%")
 	}
 	if itemType != nil {
 		query = query.Where("type = ?", *itemType)
@@ -106,9 +106,18 @@ func (db *Manager) ListGroceryItem(
 	if expirationAfter != nil {
 		query = query.Where("expiration > ?", *expirationAfter)
 	}
-	result = query.Find(&groceryItems)
+	result := query.Find(&groceryItems)
 	if result.Error != nil {
 		return []GroceryItem{}, result.Error
+	}
+	return groceryItems, nil
+}
+
+func (db *Manager) ListGroceryItemIdIn(ids []int) ([]GroceryItem, error) {
+	var groceryItems []GroceryItem
+	result := db.DbIns.Where("Id IN ?", ids).Find(&groceryItems)
+	if result.Error != nil || len(groceryItems) != len(ids) {
+		return []GroceryItem{}, errors.New("grocery item not found")
 	}
 	return groceryItems, nil
 }
@@ -154,13 +163,12 @@ func (db *Manager) ListDrink(
 	expirationAfter *time.Time,
 ) ([]Drink, error) {
 	var drinks []Drink
-	var result *gorm.DB
 	query := db.DbIns.Where("")
 	if id != nil {
 		query = query.Where("id = ?", *id)
 	}
 	if name != nil {
-		query = query.Where("name = ?", *name)
+		query = query.Where("name LIKE ?", "%"+*name+"%")
 	}
 	if carbonated != nil {
 		query = query.Where("carbonated = ?", *carbonated)
@@ -174,9 +182,82 @@ func (db *Manager) ListDrink(
 	if expirationAfter != nil {
 		query = query.Where("expiration > ?", *expirationAfter)
 	}
-	result = query.Find(&drinks)
+	result := query.Find(&drinks)
 	if result.Error != nil {
 		return []Drink{}, result.Error
 	}
 	return drinks, nil
+}
+
+func (db *Manager) CreateDishes(
+	name string,
+	complexity int,
+	groceryItems []GroceryItem,
+) (Dishes, error) {
+	dishes := Dishes{Name: name, Complexity: complexity}
+	err := db.DbIns.Create(&dishes).Association("GroceryItem").Append(&groceryItems)
+	if err != nil {
+		return Dishes{}, err
+	}
+
+	return dishes, nil
+}
+
+func (db *Manager) UpdateDishes(dishes Dishes, groceryItems *[]GroceryItem) (Dishes, error) {
+	result := db.DbIns.Save(&dishes)
+	if result.Error != nil {
+		return Dishes{}, result.Error
+	}
+
+	if groceryItems != nil {
+		err := db.DbIns.Model(&dishes).Association("GroceryItem").Delete(dishes.GroceryItem)
+		if err != nil {
+			return Dishes{}, err
+		}
+		err = result.Association("GroceryItem").Append(groceryItems)
+		if err != nil {
+			return Dishes{}, err
+		}
+	}
+
+	return dishes, nil
+}
+
+func (db *Manager) DeleteDishes(id int) error {
+	result := db.DbIns.Select("GroceryItem").Delete(&Dishes{Id: id})
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (db *Manager) ListDishes(
+	id *int,
+	name *string,
+	complexityLessThan *int,
+	complexityMoreThan *int,
+	groceryItemIds *[]int,
+) ([]Dishes, error) {
+	var dishesList []Dishes
+	query := db.DbIns.Preload("GroceryItem")
+	if id != nil {
+		query = query.Where("id = ?", *id)
+	}
+	if name != nil {
+		query = query.Where("name LIKE ?", "%"+*name+"%")
+	}
+	if complexityLessThan != nil {
+		query = query.Where("complexity <= ?", complexityLessThan)
+	}
+	if complexityMoreThan != nil {
+		query = query.Where("complexity >= ?", complexityMoreThan)
+	}
+	if groceryItemIds != nil {
+		query = query.Joins("JOIN dishes_grocery_item ON dishes.id = dishes_grocery_item.dishes_id AND dishes_grocery_item.grocery_item_id in ?", *groceryItemIds)
+	}
+	result := query.Find(&dishesList)
+	if result.Error != nil {
+		return []Dishes{}, result.Error
+	}
+	return dishesList, nil
 }

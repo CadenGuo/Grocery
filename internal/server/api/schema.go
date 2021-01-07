@@ -65,3 +65,28 @@ type ListDrinkSchema struct {
 type DeleteDrinkSchema struct {
 	Id int `json:"id" binding:"required"`
 }
+
+type CreateDishesSchema struct {
+	Name           string `json:"name" binding:"required"`
+	Complexity     int    `json:"complexity"`
+	GroceryItemIds []int  `json:"grocery_item_ids" binding:"required"`
+}
+
+type UpdateDishesSchema struct {
+	Id             int     `json:"id" binding:"required"`
+	Name           *string `json:"name"`
+	Complexity     *int    `json:"complexity"`
+	GroceryItemIds *[]int  `json:"grocery_item_ids"`
+}
+
+type ListDishesSchema struct {
+	Id                 *int    `form:"id"`
+	Name               *string `form:"name"`
+	ComplexityLessThan *int    `form:"complexity_less_than"`
+	ComplexityMoreThan *int    `form:"complexity_more_than"`
+	GroceryItemIds     *[]int  `form:"grocery_item_ids"`
+}
+
+type DeleteDishesSchema struct {
+	Id int `json:"id" binding:"required"`
+}

@@ -1,32 +1,34 @@
 package api
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"grocery/internal/common"
 	"net/http"
 )
 
-func (h *Handler) Drink(ctx *gin.Context) {
+func (h *Handler) Dishes(ctx *gin.Context) {
 	h.LogRequest(ctx)
 	method := ctx.Request.Method
 
 	switch method {
 	case http.MethodGet:
-		var requestQuery ListDrinkSchema
+		var requestQuery ListDishesSchema
 		if err := ctx.ShouldBindQuery(&requestQuery); err != nil {
 			log.Warn().Msg(err.Error())
 			ctx.JSON(http.StatusOK, failedResponse(common.EmptyMap, common.ErrorInvalidParameters))
 			return
 		}
 
-		drinks, err := h.dbManager.ListDrink(
+		fmt.Println(requestQuery)
+
+		dishes, err := h.dbManager.ListDishes(
 			requestQuery.Id,
 			requestQuery.Name,
-			requestQuery.Carbonated,
-			requestQuery.Alcoholic,
-			requestQuery.ExpirationBefore,
-			requestQuery.ExpirationAfter,
+			requestQuery.ComplexityLessThan,
+			requestQuery.ComplexityMoreThan,
+			requestQuery.GroceryItemIds,
 		)
 		if err != nil {
 			log.Warn().Msg(err.Error())
@@ -34,23 +36,27 @@ func (h *Handler) Drink(ctx *gin.Context) {
 			return
 		}
 
-		ctx.JSON(http.StatusOK, succeededResponse(drinks))
+		ctx.JSON(http.StatusOK, succeededResponse(dishes))
 
 	case http.MethodPost:
-		var requestBody CreateDrinkSchema
+		var requestBody CreateDishesSchema
 		if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 			log.Warn().Msg(err.Error())
 			ctx.JSON(http.StatusOK, failedResponse(common.EmptyMap, common.ErrorInvalidParameters))
 			return
 		}
 
-		_, err := h.dbManager.CreateDrink(
+		groceryItems, err := h.dbManager.ListGroceryItemIdIn(requestBody.GroceryItemIds)
+		if err != nil {
+			log.Warn().Msg(err.Error())
+			ctx.JSON(http.StatusOK, failedResponse(common.EmptyMap, common.ErrorInvalidParameters))
+			return
+		}
+
+		_, err = h.dbManager.CreateDishes(
 			requestBody.Name,
-			requestBody.Unit,
-			requestBody.Amount,
-			requestBody.Carbonated,
-			requestBody.Alcoholic,
-			requestBody.Expiration,
+			requestBody.Complexity,
+			groceryItems,
 		)
 		if err != nil {
 			log.Warn().Msg(err.Error())
@@ -60,41 +66,39 @@ func (h *Handler) Drink(ctx *gin.Context) {
 
 		ctx.JSON(http.StatusOK, succeededResponse(common.EmptyMap))
 	case http.MethodPut:
-		var requestBody UpdateDrinkSchema
+		var requestBody UpdateDishesSchema
 		if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 			log.Warn().Msg(err.Error())
 			ctx.JSON(http.StatusOK, failedResponse(common.EmptyMap, common.ErrorInvalidParameters))
 			return
 		}
 
-		drinks, err := h.dbManager.ListDrink(
+		dishesList, err := h.dbManager.ListDishes(
 			&requestBody.Id,
-			nil, nil, nil, nil, nil,
+			nil, nil, nil, nil,
 		)
-		if len(drinks) == 0 {
+		if len(dishesList) == 0 {
 			ctx.JSON(http.StatusOK, failedResponse(common.EmptyMap, common.ErrorInvalidParameters))
 			return
 		}
 		if requestBody.Name != nil {
-			drinks[0].Name = *requestBody.Name
+			dishesList[0].Name = *requestBody.Name
 		}
-		if requestBody.Unit != nil {
-			drinks[0].Unit = *requestBody.Unit
+		if requestBody.Complexity != nil {
+			dishesList[0].Complexity = *requestBody.Complexity
 		}
-		if requestBody.Amount != nil {
-			drinks[0].Amount = *requestBody.Amount
-		}
-		if requestBody.Carbonated != nil {
-			drinks[0].Carbonated = *requestBody.Carbonated
-		}
-		if requestBody.Alcoholic != nil {
-			drinks[0].Alcoholic = *requestBody.Alcoholic
-		}
-		if requestBody.Expiration != nil {
-			drinks[0].Expiration = *requestBody.Expiration
+		if requestBody.GroceryItemIds != nil {
+			groceryItems, err := h.dbManager.ListGroceryItemIdIn(*requestBody.GroceryItemIds)
+			if err != nil {
+				log.Warn().Msg(err.Error())
+				ctx.JSON(http.StatusOK, failedResponse(common.EmptyMap, common.ErrorInvalidParameters))
+				return
+			}
+			_, err = h.dbManager.UpdateDishes(dishesList[0], &groceryItems)
+		} else {
+			_, err = h.dbManager.UpdateDishes(dishesList[0], nil)
 		}
 
-		_, err = h.dbManager.UpdateDrink(drinks[0])
 		if err != nil {
 			log.Warn().Msg(err.Error())
 			ctx.JSON(http.StatusOK, failedResponse(common.EmptyMap, common.ErrorInternalError))
@@ -102,14 +106,14 @@ func (h *Handler) Drink(ctx *gin.Context) {
 		}
 		ctx.JSON(http.StatusOK, succeededResponse(common.EmptyMap))
 	case http.MethodDelete:
-		var requestBody DeleteDrinkSchema
+		var requestBody DeleteDishesSchema
 		if err := ctx.ShouldBindJSON(&requestBody); err != nil {
 			log.Warn().Msg(err.Error())
 			ctx.JSON(http.StatusOK, failedResponse(common.EmptyMap, common.ErrorInvalidParameters))
 			return
 		}
 
-		err := h.dbManager.DeleteDrink(requestBody.Id)
+		err := h.dbManager.DeleteDishes(requestBody.Id)
 		if err != nil {
 			log.Warn().Msg(err.Error())
 			ctx.JSON(http.StatusOK, failedResponse(common.EmptyMap, common.ErrorInternalError))

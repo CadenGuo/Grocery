@@ -25,8 +25,10 @@ func routerEngine(h *api.Handler) *gin.Engine {
 	api.GET("/drink", h.Drink)
 	api.DELETE("/drink", h.Drink)
 
-	api.POST("/create_dishes", h.Dishes)
-	api.GET("/list_dishes", h.Dishes)
+	api.POST("/dishes", h.Dishes)
+	api.GET("/dishes", h.Dishes)
+	api.PUT("/dishes", h.Dishes)
+	api.DELETE("/dishes", h.Dishes)
 	return r
 }
 
