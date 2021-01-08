@@ -75,7 +75,7 @@ func (db *Manager) UpdateGroceryItem(groceryItem GroceryItem) (GroceryItem, erro
 }
 
 func (db *Manager) DeleteGroceryItem(id int) error {
-	result := db.DbIns.Delete(&GroceryItem{Id: id})
+	result := db.DbIns.Select("GroceryItem").Delete(&GroceryItem{Id: id})
 	if result.Error != nil {
 		return result.Error
 	}
